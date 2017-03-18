@@ -1,2 +1,3 @@
-# heart-shape
-Heart shape code in R
+# nerd_toolkit
+Contains super cool R code 
+Enjoy it!!
