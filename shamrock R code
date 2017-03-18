@@ -1,1 +1,141 @@
+##title: "Shamrock Play"
+##author: "Natalie Patten"
+##date: "Friday, February 27, 2015"
 
+##Plotting the outline
+
+##The shamrock equation is r = sin(2theta) + (1/4)sin(6*theta)
+
+
+theta <- seq(0,2*pi,.001)
+r <- sin(2*theta) + (1/4)*sin(6*theta)
+
+x <- r*cos(theta)
+y <- r*sin(theta)
+
+outline <- data.frame(x = x,y = y)
+
+plot(x,y,col = "springgreen4")
+
+
+##Coloring the Shamrock
+
+##Divide the shamrock into the four quadrants.
+##Looking at a plot of r and theta, we see that r is positive when theta is between (0 and pi/2) and between (3pi/2 and 2pi). We also see that r is negative when theta is between (pi/2 and pi) and between (3pi/2 and 2pi). 
+
+##Generate random thetas in each quadrant. Calculate the r for the outline of the shamrock.
+
+##For the quadrants when r is positive, the maximum r for each theta is the outline of the curve and the minimum r is 0.  So create a random r from 0 to the quadrant maximum of r, and only keep the points for which r is below the outline at that theta.
+
+##Do the same for the quadrants where r is negative, except create random r from the quadrant minimum of r to zero. Only keep the points for which r is above the outline at that theta.
+
+set.seed(20150317)
+
+plot(theta,r)
+
+#Quadrant1
+random.theta1 <- runif(5000,0,(pi/2))
+maxr1 <- sin(2*random.theta1) + (1/4)*sin(6*random.theta1)
+randr <- runif(5000,0,max(r))
+df.1 <- data.frame(theta1 = random.theta1, maxr1 = maxr1, randr = randr)
+df.1$randx <- df.1$randr*cos(df.1$theta1)
+df.1$randy <- df.1$randr*sin(df.1$theta1)
+df.1 <- df.1[which(df.1$randr <=  df.1$maxr1),]
+#Keep only x and y to append with other quadrants
+keepers <- c("randx","randy")
+df.1 <- df.1[,keepers]
+
+#Quadrant2
+random.theta2 <- runif(5000,(3*pi/2),2*pi)
+minr2 <- sin(2*random.theta2) + (1/4)*sin(6*random.theta2)
+randr <- runif(5000,min(r),0)
+df.2 <- data.frame(theta2 = random.theta2,minr2 = minr2,randr = randr)
+df.2$randx <- df.2$randr*cos(df.2$theta2)
+df.2$randy <- df.2$randr*sin(df.2$theta2)
+df.2 <- df.2[which(df.2$randr>= df.2$minr2),]
+#Keep only x and y to append with other quadrants
+df.2 <- df.2[,keepers]
+
+
+#Quadrant3
+random.theta3 <- runif(5000,pi,(3*pi/2))
+maxr3 <- sin(2*random.theta3) + (1/4)*sin(6*random.theta3)
+randr <- runif(5000,0,max(r))
+df.3 <- data.frame(theta3 = random.theta3, maxr3 = maxr3, randr = randr)
+df.3$randx <- df.3$randr*cos(df.3$theta3)
+df.3$randy <- df.3$randr*sin(df.3$theta3)
+df.3 <- df.3[which(df.3$randr<= df.3$maxr3),]
+#Keep only x and y to append with other quadrants
+df.3 <- df.3[,keepers]
+
+
+#Quadrant4
+random.theta4 <- runif(5000,(pi/2),pi)
+minr4 <- sin(2*random.theta4) + (1/4)*sin(6*random.theta4)
+randr <- runif(5000,min(r),0)
+df.4 <- data.frame(theta4 = random.theta4,minr4 = minr4,randr = randr)
+df.4$randx <- df.4$randr*cos(df.4$theta4)
+df.4$randy <- df.4$randr*sin(df.4$theta4)
+df.4 <- df.4[which(df.4$randr>= df.4$minr4),]
+#Keep only x and y to append with other quadrants
+df.4 <- df.4[,keepers]
+
+
+##Now that we have the four quadrants, put them together in one dataframe. Then plot the outline and the points in df.full.
+
+library(ggplot2)
+
+df.full <- rbind(df.1,df.2,df.3,df.4)
+plot(x,y,col = "springgreen4",lwd = 8)
+points(df.full$randx,df.full$randy, col = "springgreen4",pch = 19, cex = 2)
+  points(x,y,col = "springgreen2")
+
+theme.settings <-  theme(legend.position = "none", 
+                   panel.background = element_blank(),
+                   axis.ticks = element_blank(),
+                   axis.line = element_blank(), 
+                   axis.text.x = element_blank(), 
+                   axis.text.y = element_blank(),
+                   plot.background = element_rect(fill = "cadetblue1"),
+                   panel.grid.major = element_blank(), 
+                   panel.grid.minor = element_blank(),
+                   axis.title.x = element_blank(),
+                   axis.title.y = element_blank())
+  
+ggplot(df.full, aes(randx, randy)) + 
+  theme.settings  + 
+  geom_point(col = "springgreen4", cex = 6)  + 
+  geom_point(data = outline, x = x, y = y,col = "springgreen2",cex = 7)
+
+  
+
+##Now make it rain gold.
+
+
+install.packages("animation")
+#install.packages("animation", repos = "http://rforge.net", type = "source")
+library(animation)
+
+animate <- function(){
+    rain.gold <- data.frame(x = runif(100,-1,1),
+                            y = runif(100,.5,1.5),
+                            fall.speed = runif(100,.05,.25))
+    
+    for (i in 1:50) {
+    rain.gold$y <- rain.gold$y - rain.gold$fall.speed
+  
+      g <- ggplot(df.full, aes(randx, randy)) + 
+      theme.settings  + 
+      geom_point(col = "springgreen4", cex = 6)  + 
+      geom_point(aes(x,y), data = outline,col = "springgreen2",cex = 7) + 
+      geom_point(aes(x, y), data = rain.gold, size = 5, color = "gold") + 
+      coord_cartesian(ylim = c(-1,1))
+
+      print(g)
+
+    }
+  }
+
+animate()
+
+saveGIF(animate(), interval = .05, movie.name = "gold.gif")
